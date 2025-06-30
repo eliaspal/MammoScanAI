@@ -1,11 +1,7 @@
-import streamlit
-import numpy
-import pydicom
-import cv2
-import tensorflow
-import os
-import pandas
-from io import BytesIO
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
+streamlit
+tensorflow
+pydicom
+opencv
+pandas
+openpyxl
+numpy
