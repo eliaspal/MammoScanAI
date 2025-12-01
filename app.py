@@ -66,8 +66,8 @@ else:
 st.sidebar.markdown(
     """
     <b>TFM:</b> Predicción de calcificaciones en mamografías<br>
-    <b>Autor:</b> Elias Pallarès, Borja Nuñez y Martín Mazuera<br>
-    <b>Tutor:</b> Alexandra Abós<br>
+    <b>Autores:</b> Elias Pallarès, Borja Nuñez y Martín Mazuera<br>
+    <b>Tutora:</b> Alexandra Abós<br>
     <b>Universidad:</b> UPF-BSM<br>
     <b>Fecha:</b> Junio 2025
     """,
