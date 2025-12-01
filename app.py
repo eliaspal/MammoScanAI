@@ -9,46 +9,37 @@ from io import BytesIO
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
+from tensorflow.keras.models import load_model as keras_load_model
 
 
 # Configuración básica
 st.set_page_config(page_title="Predicción de Calcificaciones - TFM", layout="wide")
 
 # Rutas dentro del repo
-MODEL_PATH = "models/MobileNetV2/model_best_3000.weights.h5"
+MODEL_PATH = "models/MobileNetV2/mobilenetv2_mammo_full.h5"
 DATASET_BASE_PATH = "demo"  
 
 
-# Carga del modelo 
+# Cargamos el modelo con el comando cache_resource para evitar recargar el modelo
+# cada vez que se sube una imagen y así mejorar el rendimiento de la app
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        st.error(f"No se encontró el fichero de pesos en: {MODEL_PATH}")
+        st.error(f"No se encontró el fichero de modelo en: {MODEL_PATH}")
         st.stop()
 
-    
-    base_model = MobileNetV2(
-        input_shape=(224, 224, 3),
-        include_top=False,
-        weights=None  
-    )
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.4)(x)
-    predictions = Dense(1, activation='sigmoid')(x)
-    model = Model(inputs=base_model.input, outputs=predictions)
-
     try:
-        model.load_weights(MODEL_PATH)
+        # Cargamos el modelo completo tal y como se guardó en entrenamiento
+        model = keras_load_model(MODEL_PATH, compile=False)
     except Exception as e:
-        st.error(f"Error cargando los pesos del modelo desde '{MODEL_PATH}': {e}")
+        st.error(f"Error cargando el modelo completo desde '{MODEL_PATH}': {e}")
         raise
 
     return model
 
 
 model = load_model()
+
 
 # Preprocesamiento para normalizar, aplicar CLAHE y redimensionar
 def preprocess_dicom(dicom_file):
@@ -190,3 +181,4 @@ if dicom_batch_files:
 # Pie de página
 st.markdown("---")
 st.markdown("© 2025 Elias Pallarès, Borja Nuñez, Martín Mazuera – TFM – UPF-BSM")
+
