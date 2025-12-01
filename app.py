@@ -32,11 +32,12 @@ def load_model():
 
 model = load_model()
 
+
 # Preprocesamiento para normalizar, aplicar CLAHE y redimensionar
 def preprocess_dicom(dicom_file):
+    # Leemos el DICOM (force=True por si falta cabecera estándar)
     ds = pydicom.dcmread(dicom_file, force=True)
-    
-    image = ds.pixel_array.astype(np.float32)
+
     image = ds.pixel_array.astype(np.float32)
     image -= np.min(image)
     image /= (np.max(image) + 1e-8)
@@ -50,6 +51,7 @@ def preprocess_dicom(dicom_file):
     rgb_img = rgb_img.astype(np.float32) / 255.0
 
     return image_uint8, clahe_img, np.expand_dims(rgb_img, axis=0)
+
 
 # Barra lateral
 st.sidebar.title("TFM: Detección de Calcificaciones")
@@ -72,10 +74,18 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# Selector de dataset e imagen de ejemplo
-dataset_options = ["CBIS-DDSM", "CMMD"]
-selected_dataset = st.sidebar.selectbox("Selecciona un dataset", dataset_options)
-dataset_path = os.path.join(DATASET_BASE_PATH, selected_dataset)
+# Slider de umbral de decisión
+threshold = st.sidebar.slider(
+    "Umbral de probabilidad para considerar malignidad",
+    min_value=0.0,
+    max_value=1.0,
+    value=0.5,
+    step=0.01,
+    help="Por encima de este valor, la predicción se considera 'Maligno'."
+)
+
+# Dataset CBIS-DDSM
+dataset_path = os.path.join(DATASET_BASE_PATH, "CBIS-DDSM")
 
 available_images = []
 if os.path.isdir(dataset_path):
@@ -89,8 +99,10 @@ if available_images:
 else:
     selected_image = None
     dicom_path = None
-    st.sidebar.info("No hay imágenes de ejemplo disponibles en el repositorio. "
-                    "Puedes subir tus propios DICOM por lote.")
+    st.sidebar.info(
+        "No hay imágenes de ejemplo disponibles en el repositorio. "
+        "Puedes subir tus propios DICOM por lote."
+    )
 
 # Opción para subir múltiples nuevas imágenes
 dicom_batch_files = st.sidebar.file_uploader(
@@ -102,11 +114,16 @@ dicom_batch_files = st.sidebar.file_uploader(
 # Predicción individual
 st.title("Predicción de Calcificaciones en Mamografías")
 
+st.markdown(
+    f"Umbral actual de decisión para malignidad: **{threshold:.2f}** "
+    "(probabilidades superiores se consideran *Maligno*)."
+)
+
 if dicom_path is not None and os.path.exists(dicom_path):
     try:
         original_img, clahe_img, input_img = preprocess_dicom(dicom_path)
         prediction = model.predict(input_img, verbose=0)[0][0]
-        pred_label = "Maligno" if prediction > 0.5 else "Benigno"
+        pred_label = "Maligno" if prediction > threshold else "Benigno"
         prob = round(float(prediction), 3)
 
         col1, col2 = st.columns(2)
@@ -116,7 +133,9 @@ if dicom_path is not None and os.path.exists(dicom_path):
             use_container_width=True
         )
         col2.markdown(
-            f"### Predicción: `{pred_label}`\nProbabilidad de malignidad: `{prob}`"
+            f"### Predicción: `{pred_label}`\n"
+            f"Probabilidad de malignidad: `{prob}`\n\n"
+            f"*(Umbral actual: {threshold:.2f})*"
         )
 
     except Exception as e:
@@ -124,7 +143,7 @@ if dicom_path is not None and os.path.exists(dicom_path):
 else:
     st.info(
         "No se ha podido cargar una imagen de ejemplo. "
-        "Verifica que existan archivos .dcm en las carpetas demo/CBIS-DDSM y demo/CMMD "
+        "Verifica que existan archivos .dcm en la carpeta demo/CBIS-DDSM "
         "o sube tus propios DICOM desde la barra lateral."
     )
 
@@ -136,7 +155,7 @@ if dicom_batch_files:
         try:
             _, _, input_img = preprocess_dicom(file)
             prediction = model.predict(input_img, verbose=0)[0][0]
-            label = "Maligno" if prediction > 0.5 else "Benigno"
+            label = "Maligno" if prediction > threshold else "Benigno"
             results.append({
                 "Archivo": file.name,
                 "Probabilidad": round(float(prediction), 3),
@@ -159,11 +178,11 @@ if dicom_batch_files:
     towrite.seek(0)
     st.download_button(
         "Descargar resultados Excel",
-        data=totime,  # <-- aquí en tu código real asegúrate que se llama towrite, no time
+        data=towrite,
         file_name="predicciones_batch.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 # Pie de página
 st.markdown("---")
-st.markdown("© 2025 Elias Pallarès Borja Nuñez, Martín Mazuera – TFM – UPF-BSM")
+st.markdown("© 2025 Elias Pallarès, Borja Nuñez, Martín Mazuera – TFM – UPF-BSM")
