@@ -34,12 +34,7 @@ model = load_model()
 
 # Preprocesamiento para normalizar, aplicar CLAHE y redimensionar
 def preprocess_dicom(dicom_file):
-    ds = pydicom.dcmread(dicom_file, force=True)
-    if not hasattr(ds, "file_meta") or ds.file_meta is None:
-       ds.file_meta = DicomDataset()
-
-    if getattr(ds.file_meta, "TransferSyntaxUID", None) is None:
-       ds.file_meta.TransferSyntaxUID = ImplicitVRLittleEndian
+    ds = pydicom.dcmread(dicom_file)
 
 image = ds.pixel_array.astype(np.float32)
 
