@@ -106,9 +106,10 @@ else:
 
 # Opción para subir múltiples nuevas imágenes
 dicom_batch_files = st.sidebar.file_uploader(
-    "Sube imágenes DICOM por lote",
+    "Sube varias mamografías en formato dcm",
     type=["dcm"],
-    accept_multiple_files=True
+    accept_multiple_files=True,
+    help="Puedes seleccionar varias imágenes a la vez; se mostrará en una tabla la predicción  y podrás descargar los resultados en Excel."
 )
 
 # Predicción individual
