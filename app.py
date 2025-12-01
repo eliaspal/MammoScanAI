@@ -85,7 +85,7 @@ threshold = st.sidebar.slider(
 )
 
 # Dataset CBIS-DDSM
-dataset_path = os.path.join(DATASET_BASE_PATH, "CBIS-DDSM")
+dataset_path = os.path.join(DATASET_BASE_PATH, "CMMD")
 
 available_images = []
 if os.path.isdir(dataset_path):
