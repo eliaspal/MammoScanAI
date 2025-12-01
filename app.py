@@ -180,7 +180,7 @@ if dicom_batch_files:
     st.download_button(
         "Descargar resultados Excel",
         data=towrite,
-        file_name="predicciones_batch.xlsx",
+        file_name="predicciones.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
