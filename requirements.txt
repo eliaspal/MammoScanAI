@@ -1,9 +1,10 @@
-streamlit==1.26.0
+streamlit
 tensorflow==2.20.0
 numpy
 pandas
 pydicom
 opencv-python-headless
 openpyxl
+
 
 
