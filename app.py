@@ -21,8 +21,8 @@ from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
 
 # Configuramos las variables input
 st.set_page_config(page_title="Predicción de Calcificaciones - TFM", layout="wide")
-MODEL_PATH = "/content/drive/MyDrive/TFM/models/MobileNetV2/model_best_3000.weights.h5"
-DATASET_BASE_PATH = "/content/drive/MyDrive/TFM/demo"
+MODEL_PATH = "models/MobileNetV2/model_best_3000.weights.h5"
+DATASET_BASE_PATH = "demo"
 
 # Cargamos el modelo con el comando cache_resource para evitar recargar el modelo cada vez que se sube una imagen y así mejorar el rendimiento de la app
 @st.cache_resource
