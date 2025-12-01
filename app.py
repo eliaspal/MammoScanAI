@@ -34,7 +34,7 @@ model = load_model()
 
 # Preprocesamiento para normalizar, aplicar CLAHE y redimensionar
 def preprocess_dicom(dicom_file):
-    ds = pydicom.dcmread(dicom_file)
+    ds = pydicom.dcmread(dicom_file, force=True)
     image = ds.pixel_array.astype(np.float32)
     image -= np.min(image)
     image /= (np.max(image) + 1e-8)
