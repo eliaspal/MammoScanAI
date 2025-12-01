@@ -6,36 +6,26 @@ import tensorflow as tf
 import os
 import pandas as pd
 from io import BytesIO
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
+from tensorflow.keras.models import load_model as keras_load_model
 
 # Configuramos las variables input
 st.set_page_config(page_title="Predicción de Calcificaciones - TFM", layout="wide")
-MODEL_PATH = "models/MobileNetV2/model_best_3000.weights.h5"
+MODEL_PATH = "models/MobileNetV2/mobilenetv2_mammo_tf220.keras"
 DATASET_BASE_PATH = "demo"
 
-# Cargamos el modelo con el comando cache_resource para evitar recargar el modelo cada vez que se sube una imagen y así mejorar el rendimiento de la app
+# Cargamos el modelo con el comando cache_resource para evitar recargar el modelo
+# cada vez que se sube una imagen y así mejorar el rendimiento de la app
 @st.cache_resource
 def load_model():
-    # Comprobamos que el archivo existe en el repo
     if not os.path.exists(MODEL_PATH):
-        st.error(f"No se encontró el fichero de pesos en: {MODEL_PATH}")
+        st.error(f"No se encontró el fichero de modelo en: {MODEL_PATH}")
         st.stop()
 
-    base_model = MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights=None)
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.4)(x)
-    predictions = Dense(1, activation='sigmoid')(x)
-    model = Model(inputs=base_model.input, outputs=predictions)
-
     try:
-        model.load_weights(MODEL_PATH)
+        # Cargamos el modelo completo tal y como se guardó en Colab
+        model = keras_load_model(MODEL_PATH, compile=False)
     except Exception as e:
-        # Si hay problema de compatibilidad de pesos, lo vemos en pantalla
-        st.error(f"Error cargando los pesos del modelo desde '{MODEL_PATH}': {e}")
+        st.error(f"Error cargando el modelo completo desde '{MODEL_PATH}': {e}")
         raise
 
     return model
@@ -62,7 +52,7 @@ def preprocess_dicom(dicom_file):
 # Barra lateral
 st.sidebar.title("TFM: Detección de Calcificaciones")
 
-# Branding (logo)
+# Branding
 logo_path = os.path.join(DATASET_BASE_PATH, "logo.png")
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path, width=200)
@@ -72,9 +62,10 @@ else:
 st.sidebar.markdown(
     """
     <b>TFM:</b> Predicción de calcificaciones en mamografías<br>
-    <b>Autores:</b> Elias Pallarès, Borja Nuñez y Martín Mazuera<br>
-    <b>Tutora:</b> Alexandra Abós<br>
+    <b>Autor:</b> Elias Pallarès, Borja Nuñez y Martín Mazuera<br>
+    <b>Tutor:</b> Alexandra Abós<br>
     <b>Universidad:</b> UPF-BSM<br>
+    <b>Fecha:</b> Junio 2025
     """,
     unsafe_allow_html=True
 )
@@ -90,16 +81,14 @@ if os.path.isdir(dataset_path):
 else:
     st.sidebar.warning(f"No existe la carpeta de dataset: {dataset_path}")
 
-selected_image = None
-dicom_path = None
 if available_images:
     selected_image = st.sidebar.selectbox("Selecciona una imagen de ejemplo", available_images)
     dicom_path = os.path.join(dataset_path, selected_image)
 else:
-    st.sidebar.info(
-        "No hay imágenes de ejemplo disponibles en el repositorio. "
-        "Puedes subir tus propios DICOM por lote."
-    )
+    selected_image = None
+    dicom_path = None
+    st.sidebar.info("No hay imágenes de ejemplo disponibles en el repositorio. "
+                    "Puedes subir tus propios DICOM por lote.")
 
 # Opción para subir múltiples nuevas imágenes
 dicom_batch_files = st.sidebar.file_uploader(
@@ -168,11 +157,11 @@ if dicom_batch_files:
     towrite.seek(0)
     st.download_button(
         "Descargar resultados Excel",
-        data=towrite,
+        data=totime,  # <-- aquí en tu código real asegúrate que se llama towrite, no time
         file_name="predicciones_batch.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 # Pie de página
 st.markdown("---")
-st.markdown("© 2025 Elias Pallarès Borja Nuñez Martín Mazuera – TFM – UPF-BSM")
+st.markdown("© 2025 Elias Pallarès Borja Nuñez, Martín Mazuera – TFM – UPF-BSM")
